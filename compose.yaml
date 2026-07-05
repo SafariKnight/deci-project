@@ -1,0 +1,9 @@
+services:
+  postgresql:
+    image: postgres:18.4
+    restart: always
+    env_file: .env
+    ports:
+      - 8081:5432
+    volumes:
+      - ${PWD}/db-data/:/var/lib/postgresql/
