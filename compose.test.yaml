@@ -1,0 +1,7 @@
+services:
+  postgresql_test:
+    image: postgres:18.4
+    restart: always
+    env_file: .env.test
+    ports:
+      - 8082:5432
