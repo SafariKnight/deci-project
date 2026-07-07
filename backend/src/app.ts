@@ -1,7 +1,5 @@
 import express from "express"
-import "./env.ts"
 import routes from "./routes/route.ts"
-
 
 const app = express()
 
