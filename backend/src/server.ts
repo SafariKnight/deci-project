@@ -1,7 +1,22 @@
-import app from "./app.ts"
+import "./env.ts"
+import app from "./app.ts";
 
-const PORT = process.env.PORT!
+let PORT: number;
 
-app.listen(PORT)
+if (!process.env.PORT) {
+  console.log('Missing "PORT" environment variable, defaulting to 3000')
+  PORT = 3000
+} else {
+  PORT = parseInt(process.env.PORT)
+}
 
-console.log(`Listening on port ${PORT}`)
+if (isNaN(PORT)) {
+  console.log('"PORT" environment variable should be a number, defaulting to 3000')
+  PORT = 3000
+}
+
+console.log(process.env.DATABASE_URL)
+
+app.listen(PORT, () => {
+  console.log(`Listening on port ${PORT}`)
+})

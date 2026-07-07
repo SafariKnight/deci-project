@@ -1,6 +1,7 @@
 import express from "express"
-import "dotenv/config"
+import "./env.ts"
 import routes from "./routes/route.ts"
+
 
 const app = express()
 
