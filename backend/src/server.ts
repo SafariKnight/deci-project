@@ -1,4 +1,4 @@
-import "./config/env.ts"
+import "./config/index.ts"
 import app from "./app.ts";
 
 let PORT: number;
