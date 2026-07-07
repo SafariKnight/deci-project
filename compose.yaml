@@ -6,4 +6,7 @@ services:
     ports:
       - 8081:5432
     volumes:
-      - ${PWD}/db-data/:/var/lib/postgresql/
+      - postgres_data:/var/lib/postgresql/
+
+volumes:
+  postgres_data:
