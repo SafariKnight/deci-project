@@ -1,8 +1,7 @@
 import express from "express";
-import sampleRouter from "./sample.ts";
+import authRouter from "./auth.ts"
 const app = express()
 
-app.use("/hello", sampleRouter)
-
+app.use("/auth", authRouter)
 
 export default app

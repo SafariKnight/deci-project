@@ -24,21 +24,21 @@ export function validate<T>(data: any, schema: Schema<T>, path: string = ""): Re
     const value = data[field]
     let currentPath: string
 
+    if (!value) {
+      messages.push(`["${field}"] doesn't exist`)
+      continue
+    }
+
     if (path) {
       currentPath = `${path}.${field}`
     } else {
       currentPath = field
     }
 
-
-    if (!value) {
-      messages.push(`"${field}" doesn't exist`)
-    }
-
     if (Array.isArray(validators)) {
       validators.forEach((v) => {
         const res = v.check(value)
-        if (res) {
+        if (!res) {
           messages.push(`["${currentPath}"]: ${v.message}`)
         }
       })
@@ -56,7 +56,7 @@ export function validate<T>(data: any, schema: Schema<T>, path: string = ""): Re
 }
 
 export const isString: Validator = {
-  check: (data) => typeof data !== "string",
+  check: (data) => typeof data === "string",
   message: "must be a string"
 }
 export const isNonEmpty: Validator = {
@@ -66,4 +66,11 @@ export const isNonEmpty: Validator = {
 export const isEmail: Validator = {
   check: (data) => (data as string).includes("@") && (data as string).substring((data as string).indexOf("@")).includes("."),
   message: "must be a valid email"
+}
+
+export const minLength: (minimum: number) => Validator = (minimum: number) => {
+  return {
+    check: (data) => (data as string).length >= minimum,
+    message: `must be atleast ${minimum} characters long`
+  }
 }

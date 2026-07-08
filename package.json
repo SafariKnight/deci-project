@@ -1,5 +1,6 @@
 {
-	"dependencies": {
-		"mongodb": "^7.4.0"
+	"devDependencies": {
+		"@types/cookie-parser": "^1.4.10",
+		"cookie-parser": "^1.4.7"
 	}
 }

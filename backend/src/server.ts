@@ -15,8 +15,6 @@ if (isNaN(PORT)) {
   PORT = 3000
 }
 
-console.log(process.env.DATABASE_URL)
-
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`)
 })

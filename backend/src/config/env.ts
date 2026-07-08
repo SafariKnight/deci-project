@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url"
 
 const env = process.env.NODE_ENV || "dev"
 
-if (env !== "prod") {
+if (env !== "production") {
   const envFile = {
     dev: ".env.dev" as const,
     test: ".env.test" as const
