@@ -1,10 +1,24 @@
-import { MongoClient } from "mongodb";
+import { MongoClient, ServerApiVersion } from "mongodb";
 
 const uri = process.env.MONGO_URL;
 if (!uri) {
   throw new Error('"MONGO_URL" environtment variable isn\'t provided.')
 }
 
-export const client = new MongoClient(uri);
+export const mongoClient = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true
+  }
+});
 
-export const mongo = client.db("db")
+export const mongo = mongoClient.db("db")
+
+process.on("SIGTERM", async () => {
+  await mongoClient.close()
+})
+
+process.on("SIGINT", async () => {
+  await mongoClient.close()
+})

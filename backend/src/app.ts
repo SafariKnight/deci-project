@@ -37,3 +37,9 @@ app.get("/protected", (req, res) => {
 })
 
 export default app
+const shutdown = async () => {
+  console.log(`Shutting down...`)
+}
+
+process.on("SIGTERM", shutdown)
+process.on("SIGINT", shutdown)
