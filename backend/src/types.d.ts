@@ -12,5 +12,6 @@ interface FileMetadata {
   filename: string,
   path: string,
   size: number,
-  uploadedAt: number
+  uploadedAt: number,
+  owner: number
 }

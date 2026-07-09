@@ -2,7 +2,7 @@ import "#/config/index.ts"
 import { mongo } from "#/config/mongo.ts"
 import { FileMetadata } from "#/types.js"
 import path from "path"
-import { deleteFile, saveFileMetadata } from "./fileService.ts"
+import { deleteFileById, saveFileMetadata } from "./fileService.ts"
 import fs from "fs"
 import { fileURLToPath } from "url"
 
@@ -44,7 +44,7 @@ describe("File Service", () => {
       throw new Error("Failed to save metadata")
     }
 
-    await deleteFile(file.id)
+    await deleteFileById(file.id)
 
     const res = await db.findOne({ _id: file.id })
 

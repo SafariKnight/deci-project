@@ -1,15 +1,17 @@
 import express, { NextFunction, Response, Request } from "express"
 import cookieParser from "cookie-parser"
 import routes from "./routes/route.ts"
-import { protectedRoute } from "./middleware/auth.ts";
+import { fileURLToPath } from "url";
+import path from "path";
 
 const app = express()
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(express.json({}));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
-
-
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
    if (err instanceof SyntaxError && 'status' in err && err.status === 400 && 'body' in err) {
@@ -19,21 +21,17 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
    next();
 });
 
-app.use("/", routes)
+app.use("/image/by-name", express.static(path.resolve(__dirname, "../images")))
 
-app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`${req.method} ${req.path}`)
-  next()
-})
+app.use("/", routes)
 
 app.get("/health", (req, res) => {
   res.status(200).send({ status: "OK"})
 })
 
-app.use("/protected", protectedRoute)
-
-app.get("/protected", (req, res) => {
-  res.send(req.user)
+app.use((req: Request, res: Response, next: NextFunction) => {
+  console.log(`${req.method} ${req.path}`)
+  next()
 })
 
 export default app

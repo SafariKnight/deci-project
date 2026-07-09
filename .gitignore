@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
 /backend/prisma/generated/
+/backend/images
 
 # Build outputs
 build/
