@@ -1,8 +1,8 @@
 import path from "path";
-import fs from "fs"
-import multer from "multer"
+import fs from "fs";
+import multer from "multer";
 
-export const storagePath = path.resolve(__dirname, "../../images")
+export const storagePath = path.resolve(__dirname, "../../images");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -11,7 +11,7 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
-  cb(null, Date.now().toString() + ext);
-}
+    cb(null, Date.now().toString() + ext);
+  },
 });
-export const upload = multer({ storage }).single("image")
+export const upload = multer({ storage }).single("image");

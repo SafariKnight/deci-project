@@ -11,6 +11,7 @@ model User {
   id            Int            @id @default(autoincrement())
   username      String
   email         String         @unique
+  role          Role           @default(USER)
   password      String
   refreshTokens RefreshToken[]
 }
@@ -19,4 +20,10 @@ model RefreshToken {
   token  String @id
   userId Int
   user   User   @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+  OWNER
 }

@@ -1,104 +1,144 @@
-import { postgres } from "#/config/postgres.ts"
-import { PrismaClientKnownRequestError } from "#prisma/internal/prismaNamespace.ts"
-import { UserCreateInput, UserSelect } from "#prisma/models.ts"
-import { JWTPayload } from "jose"
-import { createAccessToken, makeRefreshToken } from "./jwtService.ts"
-import { comparePassword, hashPassword } from "./passwordService.ts"
+import { postgres } from "#/config/postgres.ts";
+import { PrismaClientKnownRequestError } from "#prisma/internal/prismaNamespace.ts";
+import { UserCreateInput, UserSelect } from "#prisma/models.ts";
+import { JWTPayload } from "jose";
+import { createAccessToken, makeRefreshToken } from "./jwtService.ts";
+import { comparePassword, hashPassword } from "./passwordService.ts";
+import { Role } from "#prisma/enums.ts";
 
 export async function createUser(data: UserCreateInput) {
   return await postgres.user.create({
     omit: {
-      password: true
+      password: true,
     },
-    data
-  })
+    data,
+  });
 }
 
-export async function findUserByEmail(email: string, select: UserSelect | undefined) {
+export async function getUserById(id: number, select: UserSelect | undefined) {
   return await postgres.user.findUnique({
     where: {
-      email
+      id
     },
     select
   })
 }
 
-export async function findUserByAccessTokenPayload(accessTokenPayload: JWTPayload) {
+export async function getUserByEmail(email: string, select: UserSelect | undefined) {
   return await postgres.user.findUnique({
     where: {
-      email: accessTokenPayload.sub
+      email,
+    },
+    select,
+  });
+}
+
+export async function getUserByAccessTokenPayload(accessTokenPayload: JWTPayload) {
+  return await postgres.user.findUnique({
+    where: {
+      email: accessTokenPayload.sub,
     },
     omit: {
-      password: true
-    }
-  })
+      password: true,
+    },
+  });
 }
 
-export async function register(username: string, email: string, password: string): Promise<
-  { ok: false; error: "email_in_use" }
-  | { ok: true; user: { id: number, username: string, email: string} }> {
-    let user;
-
-    try {
-      user = await createUser({
-        username: username,
-        email: email,
-        password: await hashPassword(password)
-      })
-    } catch (e){
-      if (e instanceof PrismaClientKnownRequestError) {
-        if (e.code === "P2002") {
-          return { ok: false, error: "email_in_use"}
-        }
+export async function changeUserRole(id: number, newRole: Role): Promise<{ ok: true; } | { ok: false; error: "missing_user"; }> {
+  try {
+    await postgres.user.update({
+      where: {
+        id
+      },
+      data: {
+        role: newRole
       }
-      throw e
+    })
+    return { ok: true }
+  } catch (e) {
+    if (e instanceof PrismaClientKnownRequestError && e.code === "P2025") {
+      return { ok: false, error: "missing_user"}
     }
-    return { ok: true, user }
+    throw e
+  }
 }
 
-export async function login(email: string, password: string): Promise<
-  { ok: false; error: "email_wasnt_found" | "wrong_password" }
-  | { ok: true; accessToken: string; refreshToken: string}> {
-  const user = await findUserByEmail(email, {
+export async function register(
+  username: string,
+  email: string,
+  password: string,
+): Promise<
+  | { ok: false; error: "email_in_use" }
+  | { ok: true; user: { id: number; username: string; email: string } }
+> {
+  let user;
+
+  try {
+    user = await createUser({
+      username: username,
+      email: email,
+      password: await hashPassword(password),
+    });
+  } catch (e) {
+    if (e instanceof PrismaClientKnownRequestError) {
+      if (e.code === "P2002") {
+        return { ok: false, error: "email_in_use" };
+      }
+    }
+    throw e;
+  }
+  return { ok: true, user };
+}
+
+export async function login(
+  email: string,
+  password: string,
+): Promise<
+  | { ok: false; error: "email_wasnt_found" | "wrong_password" }
+  | { ok: true; accessToken: string; refreshToken: string }
+> {
+  const user = await getUserByEmail(email, {
     email: true,
     password: true,
-    id: true
-  })
+    id: true,
+  });
 
   if (!user) {
-    return { ok: false, error: "email_wasnt_found" } as const
+    return { ok: false, error: "email_wasnt_found" } as const;
   }
 
   if (await comparePassword(user.password, password)) {
-    const accessToken = await createAccessToken({ sub: email })
-    const refreshToken = await makeRefreshToken()
+    const accessToken = await createAccessToken({ sub: email });
+    const refreshToken = await makeRefreshToken();
 
     await postgres.refreshToken.create({
       data: {
         token: refreshToken,
         userId: user.id,
-      }
-    })
-    return { ok: true, accessToken, refreshToken } as const
+      },
+    });
+    return { ok: true, accessToken, refreshToken } as const;
   }
 
-  return { ok: false, error: "wrong_password" } as const
+  return { ok: false, error: "wrong_password" } as const;
 }
 
-export async function refresh(refreshToken: string): Promise<{ok: false, error: "invalid_token"} | { ok: true, accessToken: string  }> {
+export async function refresh(
+  refreshToken: string,
+): Promise<{ ok: false; error: "invalid_token" } | { ok: true; accessToken: string }> {
   const token = await postgres.refreshToken.findUnique({
     where: {
-      token: refreshToken
+      token: refreshToken,
     },
     include: {
-      user: true
-    }
-  })
+      user: true,
+    },
+  });
   if (!token) {
-    return { ok: false, error: "invalid_token"}
+    return { ok: false, error: "invalid_token" };
   }
   return {
     ok: true,
-    accessToken: await createAccessToken({ sub: token.user.email })
-  }
+    accessToken: await createAccessToken({ sub: token.user.email }),
+  };
 }

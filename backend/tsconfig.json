@@ -11,8 +11,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "paths": {
-      "#/*": ["./src/*"],
+      "#/*": ["./src/*"]
     },
-    "types": ["node", "jest"],
-  },
+    "types": ["node", "jest"]
+  }
 }

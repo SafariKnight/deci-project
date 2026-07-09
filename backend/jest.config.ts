@@ -1,14 +1,14 @@
-import type {Config} from 'jest';
-import { createDefaultEsmPreset } from "ts-jest"
+import type { Config } from "jest";
+import { createDefaultEsmPreset } from "ts-jest";
 
-const presetConfig = createDefaultEsmPreset({})
+const presetConfig = createDefaultEsmPreset({});
 
 const config: Config = {
   clearMocks: true,
   collectCoverage: true,
   coverageDirectory: "coverage",
   coverageProvider: "v8",
-  ...presetConfig
+  ...presetConfig,
 };
 
 export default config;
