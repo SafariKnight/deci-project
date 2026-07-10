@@ -1,4 +1,4 @@
-import { verifyJWT } from "#/services/jwtService.ts";
+import { verifyJWT } from "#/services/tokenService.ts";
 import { getUserByAccessTokenPayload } from "#/services/userService.ts";
 import { RequestHandler } from "express";
 import { errors } from "jose";
@@ -94,9 +94,9 @@ export const protectedRouteAdmin: RequestHandler = async (req, res, next) => {
         error: "user_doesnt_exist",
       });
     }
-    console.log(user)
+    console.log(user);
 
-    if (user.role === 'OWNER' || user.role === 'ADMIN') {
+    if (user.role === "OWNER" || user.role === "ADMIN") {
       req.user = user;
       return next();
     }

@@ -3,7 +3,7 @@ import { randomBytes } from "crypto";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const ALG = "HS256";
-const ACCESS_TOKEN_EXPIRY = "15m";
+const ACCESS_TOKEN_EXPIRY = "1hour";
 
 if (!JWT_SECRET) {
   throw new Error('Missing "JWT_SECRET" environment variable.');

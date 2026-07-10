@@ -17,10 +17,10 @@ interface FileMetadata {
 }
 
 interface Product {
-  name: string,
-  price: number,
-  owner: number,
-  details: Record<string, string|number>,
-  imageFilename: string,
-  uploadedAt: number
+  name: string;
+  price: number;
+  owner: number;
+  details: Record<string, string | number>;
+  imageFilename: string;
+  uploadedAt: number;
 }

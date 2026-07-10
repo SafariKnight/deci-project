@@ -4,9 +4,7 @@ import { upload } from "#/middleware/image.ts";
 import { protectedRoute } from "#/middleware/auth.ts";
 const app = express();
 
-app.use("/", protectedRoute);
-
-app.post("/", upload, uploadRoute);
-app.delete("/by-name/:image", deleteRoute);
+app.post("/", protectedRoute, upload, uploadRoute);
+app.delete("/by-name/:image", protectedRoute, deleteRoute);
 
 export default app;

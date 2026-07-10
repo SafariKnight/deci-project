@@ -17,7 +17,7 @@ export function validate<T>(data: any, schema: Schema<T>, path: string = ""): Re
 
   let messages: string[] = [];
 
-  for (const field in schema) {
+  outer: for (const field in schema) {
     const validators = schema[field];
     const value = data[field];
     let currentPath: string;
@@ -34,17 +34,15 @@ export function validate<T>(data: any, schema: Schema<T>, path: string = ""): Re
     }
 
     if (Array.isArray(validators)) {
-      validators.forEach((v) => {
+      for (const v of validators) {
         const res = v.check(value);
         if (!res) {
           messages.push(`["${currentPath}"]: ${v.message}`);
+          continue outer;
         }
-      });
-    } else {
-      const res = validate(value, validators as Schema<T>, currentPath);
-      if (!res.ok) {
-        messages = messages.concat(res.errors);
       }
+    } else {
+      messages = validateField<T>(value, validators, currentPath, messages);
     }
   }
   if (messages.length === 0) {
@@ -77,12 +75,34 @@ export const minLength: (minimum: number) => Validator = (minimum: number) => {
 
 export const isNum: Validator = {
   check: (data) => typeof data === "number",
-  message: "must be a number"
-}
+  message: "must be a number",
+};
 
 export const oneOf: (validElements: unknown[]) => Validator = (validElements) => {
   return {
     check: (data) => validElements.includes(data),
-    message: `must be one of ${validElements}`
+    message: `must be one of ${validElements}`,
+  };
+};
+
+export const isObject: Validator = {
+  check: (data) => typeof data === "object",
+  message: "must be an object",
+};
+
+export const isPositive: Validator = {
+  check: (data) => (data as number) > 0,
+  message: "must be an a positive number",
+};
+export function validateField<T>(
+  value: any,
+  validators: Schema<T>[Extract<keyof T, string>],
+  currentPath: string,
+  messages: string[] = [],
+) {
+  const res = validate(value, validators as Schema<T>, currentPath);
+  if (!res.ok) {
+    messages = messages.concat(res.errors);
   }
+  return messages;
 }

@@ -1,9 +1,8 @@
 import path from "path";
-import fs from "fs";
 import multer from "multer";
 
 export const storagePath = path.resolve(__dirname, "../../images");
-const MEGABYTE = 1024 * 1024
+const MEGABYTE = 1024 * 1024;
 
 const storage = multer.diskStorage({
   destination: storagePath,

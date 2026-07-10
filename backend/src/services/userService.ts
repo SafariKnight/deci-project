@@ -2,7 +2,7 @@ import { postgres } from "#/config/postgres.ts";
 import { PrismaClientKnownRequestError } from "#prisma/internal/prismaNamespace.ts";
 import { UserCreateInput, UserSelect } from "#prisma/models.ts";
 import { JWTPayload } from "jose";
-import { createAccessToken, makeRefreshToken } from "./jwtService.ts";
+import { createAccessToken, makeRefreshToken } from "./tokenService.ts";
 import { comparePassword, hashPassword } from "./passwordService.ts";
 import { Role } from "#prisma/enums.ts";
 
@@ -18,10 +18,10 @@ export async function createUser(data: UserCreateInput) {
 export async function getUserById(id: number, select: UserSelect | undefined) {
   return await postgres.user.findUnique({
     where: {
-      id
+      id,
     },
-    select
-  })
+    select,
+  });
 }
 
 export async function getUserByEmail(email: string, select: UserSelect | undefined) {
@@ -44,22 +44,25 @@ export async function getUserByAccessTokenPayload(accessTokenPayload: JWTPayload
   });
 }
 
-export async function changeUserRole(id: number, newRole: Role): Promise<{ ok: true; } | { ok: false; error: "missing_user"; }> {
+export async function changeUserRole(
+  id: number,
+  newRole: Role,
+): Promise<{ ok: true } | { ok: false; error: "missing_user" }> {
   try {
     await postgres.user.update({
       where: {
-        id
+        id,
       },
       data: {
-        role: newRole
-      }
-    })
-    return { ok: true }
+        role: newRole,
+      },
+    });
+    return { ok: true };
   } catch (e) {
     if (e instanceof PrismaClientKnownRequestError && e.code === "P2025") {
-      return { ok: false, error: "missing_user"}
+      return { ok: false, error: "missing_user" };
     }
-    throw e
+    throw e;
   }
 }
 

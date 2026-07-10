@@ -1,5 +1,5 @@
 import "#/config/env.ts";
-import { createAccessToken, verifyJWT } from "./jwtService.ts";
+import { createAccessToken, verifyJWT } from "./tokenService.ts";
 
 const testData = { test: "data" };
 

@@ -37,6 +37,7 @@ export const uploadRoute: RequestHandler = async (req, res) => {
   res.status(201).json({
     message: "Successfully created",
     path: `${process.env.BASE_URL}/image/by-name/${metadata.filename}`,
+    filename: metadata.filename,
   });
 };
 

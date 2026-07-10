@@ -1,8 +1,10 @@
 import { mongo } from "#/config/mongo.ts";
 import { Product } from "#/types.js";
-import { MongoError, MongoServerError, ObjectId } from "mongodb";
+import { fileExists } from "#/utils/file.ts";
+import { MongoError, ObjectId } from "mongodb";
+import { getFileByFilename } from "./fileService.ts";
 
-const db = mongo.collection<Product>("products")
+const db = mongo.collection<Product>("products");
 
 export async function createProduct(product: Omit<Product, "uploadedAt">) {
   if (!product) {
@@ -12,18 +14,10 @@ export async function createProduct(product: Omit<Product, "uploadedAt">) {
   try {
     const result = await db.insertOne({
       ...product,
-      uploadedAt: Date.now()
+      uploadedAt: Date.now(),
     });
     return result.insertedId;
   } catch (error) {
-    if (error instanceof MongoServerError) {
-      if (error.code === 11000) {
-        throw new Error(`Duplicate key error: ${JSON.stringify(error.keyPattern)}`);
-      }
-      if (error.code === 121) {
-        throw new Error(`Document validation failed: ${error.errmsg}`);
-      }
-    }
     if (error instanceof MongoError) {
       throw new Error(`Database operation failed: ${error.message}`);
     }
@@ -32,18 +26,17 @@ export async function createProduct(product: Omit<Product, "uploadedAt">) {
 }
 
 export async function deleteProduct(id: ObjectId) {
-  const result = await db.deleteOne({ _id: id })
+  const result = await db.deleteOne({ _id: id });
   if (result.deletedCount === 0) {
-    return "document_not_found" as const
+    return "document_not_found" as const;
   }
 }
 
 export async function getProductById(id: ObjectId) {
-  return await db.findOne({ _id: new ObjectId(id) })
-
+  return await db.findOne({ _id: new ObjectId(id) });
 }
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 5;
 export async function listProducts(page: number = 1) {
   const skipCount = (page - 1) * PAGE_SIZE;
   const cursor = db.find({}).sort({ uploadedAt: -1 }).skip(skipCount).limit(PAGE_SIZE);
@@ -51,9 +44,24 @@ export async function listProducts(page: number = 1) {
   return await cursor.toArray();
 }
 
-export async function updateProduct(id: ObjectId, newDetails: Partial<Product>) {
-  const result = await db.updateOne({_id: id}, newDetails)
+export async function updateProduct(
+  id: ObjectId,
+  newDetails: Partial<Omit<Product, "uploadedAt" | "owner">>,
+) {
+  if (newDetails.imageFilename) {
+    const file = await getFileByFilename(newDetails.imageFilename);
+    if (!file) {
+      return "file_does_not_exist" as const;
+    }
+
+    const exists = await fileExists(file.path);
+
+    if (!exists) {
+      return "file_does_not_exist" as const;
+    }
+  }
+  const result = await db.updateOne({ _id: id }, { $set: newDetails });
   if (result.matchedCount === 0) {
-    return "product_not_found" as const
+    return "product_not_found" as const;
   }
 }

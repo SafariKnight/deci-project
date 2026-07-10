@@ -1,5 +1,14 @@
 import { RequestHandler } from "express";
-import { isString, isNonEmpty, Schema, isEmail, validate, minLength, isNum, oneOf } from "#/utils/validation.ts";
+import {
+  isString,
+  isNonEmpty,
+  Schema,
+  isEmail,
+  validate,
+  minLength,
+  isNum,
+  oneOf,
+} from "#/utils/validation.ts";
 import { changeUserRole, getUserById, login, refresh, register } from "#/services/userService.ts";
 import { Role } from "#prisma/enums.ts";
 
@@ -100,57 +109,52 @@ export const refreshRoute: RequestHandler = async (req, res) => {
 };
 
 type changeRoleRequest = {
-  id: number,
-  newRole: Role
-}
+  id: number;
+  newRole: Role;
+};
 
 const changeRoleSchema: Schema<changeRoleRequest> = {
-  id: [
-    isNum
-  ],
-  newRole: [
-    isString,
-    oneOf(["USER", "ADMIN", "OWNER"])
-  ]
-}
+  id: [isNum],
+  newRole: [isString, oneOf(["USER", "ADMIN", "OWNER"])],
+};
 
 export const changeRoleRoute: RequestHandler = async (req, res) => {
   // oxlint-disable-next-line no-unused-vars
-  const user = req.user
+  const user = req.user;
 
-  const result = validate(req.body, changeRoleSchema)
+  const result = validate(req.body, changeRoleSchema);
 
   if (!result.ok) {
-    return res.status(422).json({ errors: result.errors })
+    return res.status(422).json({ errors: result.errors });
   }
 
-  const body = result.value
+  const body = result.value;
 
   if ((await getUserById(body.id, { role: true }))?.role === "OWNER") {
     return res.status(403).json({
       message: "Cannot change owner's role",
-      error: "owner_must_not_change"
-    })
+      error: "owner_must_not_change",
+    });
   }
-  if (user.role === "ADMIN", body.newRole === "OWNER") {
+  if ((user.role === "ADMIN", body.newRole === "OWNER")) {
     return res.status(403).json({
       message: "Admin cannot make owner",
-      error: "not_authorized"
-    })
+      error: "not_authorized",
+    });
   }
 
-  const changeResult = await changeUserRole(body.id, body.newRole)
+  const changeResult = await changeUserRole(body.id, body.newRole);
 
   if (!changeResult.ok) {
     return res.status(404).json({
       message: "Cannot find user",
-      error: changeResult.error
-    })
+      error: changeResult.error,
+    });
   }
 
-  return res.status(204).send()
-}
+  return res.status(204).send();
+};
 
 export const meRoute: RequestHandler = async (req, res) => {
-  return res.json(req.user)
-}
+  return res.json(req.user);
+};
