@@ -15,3 +15,12 @@ interface FileMetadata {
   uploadedAt: number;
   owner: number;
 }
+
+interface Product {
+  name: string,
+  price: number,
+  owner: number,
+  details: Record<string, string|number>,
+  imageFilename: string,
+  uploadedAt: number
+}
