@@ -1,0 +1,19 @@
+# Backend .dockerignore
+node_modules
+dist
+coverage
+*.log
+.env*
+*.local
+.DS_Store
+.git
+.gitignore
+README.md
+*.md
+Dockerfile
+docker-compose*.yml
+.nyc_output
+.vscode
+.idea
+*.sh
+*.bat

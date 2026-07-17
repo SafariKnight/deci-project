@@ -1,53 +1,91 @@
-import "#/config/index.ts";
-import { mongo } from "#/config/mongo.ts";
-import { FileMetadata } from "#/types.js";
-import path from "path";
-import { deleteFileById, saveFileMetadata } from "./fileService.ts";
-import fs from "fs";
-import { fileURLToPath } from "url";
+import "#src/config/index.ts";
+import { mongo } from '#src/config/mongo.js';
+import { FileMetadata } from "#src/types.js";
+import {
+  deleteFileByFilename,
+  getFileByFilename,
+  getFiles,
+  uploadFile,
+} from './fileService.js';
+import { ERROR_CODES } from '#src/utils/errorCodes.js';
 
-const db = mongo.collection("files");
-
-const testMetadata: FileMetadata = {
-  filename: "testFile.txt",
-  uploadedAt: 1783627790456,
-  path: "/home/kareem/projects/DECI/week8/backend/images/textFile.txt",
-  size: 1962,
-};
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const filesDb = mongo.collection("files");
 
 afterEach(async () => {
-  await db.drop();
+  await filesDb.drop().catch(() => {});
+  await mongo.collection("images.files").drop().catch(() => {});
+  await mongo.collection("images.chunks").drop().catch(() => {});
 });
 
+const testBuffer = Buffer.from("This is a test\n");
+
 describe("File Service", () => {
-  it("Saves files", async () => {
-    await fs.promises.copyFile(path.resolve(__dirname, "testFile.txt"), testMetadata.path);
-    const file = await saveFileMetadata(testMetadata);
+  it("Uploads a file to GridFS and saves metadata", async () => {
+    const result = await uploadFile("testFile.txt", testBuffer, {
+      owner: 1,
+      uploadedAt: 1783627790456,
+    });
 
-    if (!file.ok) {
-      throw new Error("Failed to save metadata");
-    }
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("Test failed");
+    expect(result.metadata.filename).toBe("testFile.txt");
+    expect(result.metadata.size).toBe(testBuffer.length);
+    expect(result.metadata.owner).toBe(1);
 
-    const res = await db.findOne({ _id: file.id });
+    const res = await filesDb.findOne({ filename: "testFile.txt" });
     expect(res).toBeDefined();
-    await fs.promises.unlink(testMetadata.path);
+  });
+
+  it("Can retrieve a file by filename", async () => {
+    await uploadFile("testFile.txt", testBuffer, {
+      owner: 1,
+      uploadedAt: 1783627790456,
+    });
+
+    const result = await getFileByFilename("testFile.txt");
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("Test failed");
+    expect(result.metadata.filename).toBe("testFile.txt");
+  });
+
+  it("Returns not found for non-existent filename", async () => {
+    const result = await getFileByFilename("does-not-exist.txt");
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Test failed");
+    expect(result.error).toBe(ERROR_CODES.FILE.NOT_FOUND);
   });
 
   it("Can delete a file", async () => {
-    await fs.promises.copyFile(path.resolve(__dirname, "testFile.txt"), testMetadata.path);
-    const file = await saveFileMetadata(testMetadata);
+    const result = await uploadFile("testFile.txt", testBuffer, {
+      owner: 1,
+      uploadedAt: 1783627790456,
+    });
+    if (!result.ok) throw new Error("Setup failed");
 
-    if (!file.ok) {
-      throw new Error("Failed to save metadata");
-    }
+    const deleteResult = await deleteFileByFilename("testFile.txt");
+    expect(deleteResult.ok).toBe(true);
 
-    await deleteFileById(file.id);
-
-    const res = await db.findOne({ _id: file.id });
-
+    const res = await filesDb.findOne({ filename: "testFile.txt" });
     expect(res).toBeNull();
+  });
+
+  it("Fails to delete a non-existent file", async () => {
+    const result = await deleteFileByFilename("ghost.txt");
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Test failed");
+    expect(result.error).toBe(ERROR_CODES.FILE.MISSING);
+  });
+
+  it("Lists files correctly", async () => {
+    await uploadFile("testFile.txt", testBuffer, {
+      owner: 1,
+      uploadedAt: 1783627790456,
+    });
+
+    const files = await getFiles(1);
+    expect(files).toBeInstanceOf(Array);
+    expect(files.length).toBeGreaterThan(0);
+    expect(files[0].filename).toBe("testFile.txt");
   });
 });

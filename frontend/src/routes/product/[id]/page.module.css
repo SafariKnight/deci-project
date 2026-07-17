@@ -1,0 +1,280 @@
+.wrapper {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    color: white;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    align-items: start;
+}
+
+.imageSection {
+    position: sticky;
+    top: 2rem;
+}
+
+.mainImage {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #333;
+}
+
+.noImage {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    border: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 18px;
+    background: #1a1a2e;
+}
+
+.infoSection {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.title {
+    font-size: 28px;
+    margin: 0;
+}
+
+.ownerName {
+    color: #888;
+    font-size: 14px;
+    margin: 0;
+}
+
+.ownerName a {
+    color: #3b82f6;
+    text-decoration: none;
+}
+
+.ownerName a:hover {
+    text-decoration: underline;
+}
+
+.price {
+    font-size: 24px;
+    font-weight: bold;
+    color: #4ade80;
+    margin: 0;
+}
+
+.description h2,
+.details h2 {
+    font-size: 18px;
+    margin-bottom: 0.5rem;
+    color: #ccc;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.description p {
+    color: #aaa;
+    line-height: 1.6;
+}
+
+.detailsTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.detailsTable tr {
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.detailsTable td {
+    padding: 0.4rem 0.5rem;
+}
+
+.detailKey {
+    color: #888;
+    font-weight: 600;
+    text-transform: capitalize;
+    width: 40%;
+}
+
+.detailValue {
+    color: #ddd;
+}
+
+.ownerButton {
+    padding: 0.75rem 1.5rem;
+    border: 1px solid #555;
+    border-radius: 8px;
+    background: transparent;
+    color: #888;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: not-allowed;
+}
+
+.cartQuantity {
+    color: #4ade80;
+    font-size: 14px;
+    margin: 0;
+    font-weight: 600;
+}
+
+.addToCart {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.addToCart:hover {
+    background: #1d4ed8;
+}
+
+.addToCart:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.avgRating {
+    color: #fbbf24;
+    font-size: 16px;
+    margin: 0;
+}
+
+.reviews {
+    margin-top: 3rem;
+    border-top: 1px solid #333;
+    padding-top: 2rem;
+}
+
+.reviews h2 {
+    font-size: 22px;
+    margin-bottom: 1.5rem;
+    color: white;
+}
+
+.reviewForm {
+    background: #1a1a2e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.starInput {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.star {
+    font-size: 28px;
+    color: #444;
+    cursor: pointer;
+    transition: color 0.15s;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.starActive {
+    color: #fbbf24;
+}
+
+.commentInput {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #555;
+    border-radius: 6px;
+    background: #2a2a3e;
+    color: white;
+    font-size: 15px;
+    outline: none;
+    resize: vertical;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.commentInput:focus {
+    border-color: #3b82f6;
+}
+
+.submitReview {
+    align-self: flex-end;
+    padding: 0.5rem 1.25rem;
+    border: none;
+    border-radius: 6px;
+    background: #2563eb;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.submitReview:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.loginPrompt {
+    color: #aaa;
+    margin-bottom: 1.5rem;
+}
+
+.loginPrompt a {
+    color: #3b82f6;
+}
+
+.reviewList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.noReviews {
+    color: #666;
+    text-align: center;
+}
+
+.reviewCard {
+    background: #1a1a2e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.reviewHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.reviewStars {
+    color: #fbbf24;
+    font-size: 18px;
+}
+
+.reviewUser {
+    color: #888;
+    font-size: 13px;
+}
+
+.reviewComment {
+    color: #ccc;
+    line-height: 1.5;
+    margin: 0;
+}

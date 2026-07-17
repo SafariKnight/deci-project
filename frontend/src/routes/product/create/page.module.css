@@ -1,0 +1,151 @@
+.container {
+    padding-block: 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: white;
+    text-align: center;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.label {
+    color: gray;
+    font-size: 12px;
+    text-align: left;
+}
+
+.input {
+    width: 100%;
+    padding: 0.5rem;
+    background-color: #2a2a2a;
+    border: 1px solid #555;
+    border-radius: 4px;
+    color: white;
+    box-sizing: border-box;
+}
+
+.input:focus {
+    outline: none;
+    border-color: #0088ff;
+}
+
+.textarea {
+    resize: vertical;
+}
+
+.detailsContainer {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.detailsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.detailsHeader h3 {
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+}
+
+.btnAddDetail {
+    background: none;
+    border: 1px solid white;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0.2rem 0.5rem;
+    font-size: 14px;
+}
+
+.btnAddDetail:hover {
+    background-color: #333;
+}
+
+.detailRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    align-items: center;
+    width: 100%;
+}
+
+.detailInput {
+    padding: 0.4rem;
+    background-color: #2a2a2a;
+    border: 1px solid #555;
+    border-radius: 4px;
+    color: white;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.btnRemoveDetail {
+    background: none;
+    border: none;
+    color: indianred;
+    cursor: pointer;
+    font-size: 18px;
+    margin-left: 0.5rem;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.btnSubmit {
+    width: clamp(6rem, 50%, 8rem);
+    border: 1px black solid;
+    background-color: #efefef;
+    border-radius: 6px;
+    color: black;
+    aspect-ratio: 8/3;
+    font-weight: bold;
+}
+
+.btnSubmit:hover {
+    background-color: #ddd;
+}
+
+.btnSubmitLoading {
+    background-color: #888;
+    cursor: not-allowed;
+}
+
+.btnCancel {
+    color: gray;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.btnCancel:hover {
+    color: white;
+    text-decoration: underline;
+}

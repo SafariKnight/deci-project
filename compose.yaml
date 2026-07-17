@@ -1,4 +1,5 @@
 services:
+  # --- DATABASES ---
   postgresql:
     image: postgres:18.4
     restart: always
@@ -7,6 +8,11 @@ services:
       - 6011:5432
     volumes:
       - postgres_data:/var/lib/postgresql/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d database"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   mongo:
     image: mongo:8.3.4
@@ -16,6 +22,109 @@ services:
       - 6021:27017
     volumes:
       - mongodb_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- TEST DATABASES ---
+  postgresql_test:
+    image: postgres:18.4
+    restart: always
+    env_file: .env.test
+    ports:
+      - 6012:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testpostgres -d testdatabase"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mongo_test:
+    image: mongo:8.3.4
+    restart: always
+    env_file: .env.test
+    ports:
+      - 6022:27017
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- BACKEND TEST SERVICE (runs tests, exits) ---
+  backend-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: builder
+    env_file: ./backend/.env.test
+    depends_on:
+      postgresql_test:
+        condition: service_healthy
+      mongo_test:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=test
+    command: sh -c "npx prisma db push && npm test"
+
+  # --- FRONTEND TEST SERVICE ---
+  frontend-test:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: builder
+    depends_on:
+      backend-test:
+        condition: service_completed_successfully
+    environment:
+      - VITE_API_URL=http://backend:3000
+      - NODE_ENV=test
+    command: npm test
+
+  # --- PRODUCTION SERVICES (start after tests pass) ---
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    env_file: ./backend/.env.dev
+    environment:
+      POSTGRES_URL: postgresql://postgres:password@postgresql:5432/database
+      MONGO_URL: mongodb://mongo:password@mongo:27017/
+      FRONTEND_URL: http://localhost:8080
+    ports:
+      - 3000:3000
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      backend-test:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+      args:
+        VITE_API_URL: http://localhost:3000
+    ports:
+      - 8080:80
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend-test:
+        condition: service_completed_successfully
+    restart: unless-stopped
 
 volumes:
   postgres_data:

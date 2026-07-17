@@ -1,0 +1,124 @@
+.page {
+    padding-block: 2rem;
+}
+
+.page h2 {
+    color: white;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-size: 28px;
+}
+
+.productGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.25rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.productCard {
+    background: #1a1a2e;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #333;
+}
+
+.productImage {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+}
+
+.productInfo {
+    padding: 0.75rem;
+}
+
+.productInfo h3 {
+    color: white;
+    font-size: 16px;
+    margin: 0 0 0.25rem;
+}
+
+.productPrice {
+    color: #4ade80;
+    font-weight: bold;
+    margin: 0;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    color: white;
+}
+
+.pagination button {
+    padding: 0.4rem 1rem;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background: #2a2a3e;
+    color: white;
+    cursor: pointer;
+}
+
+.pagination button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.createButton {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    background: #2563eb;
+    color: white;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    font-size: 14px;
+}
+
+.createButton:hover {
+    background: #1d4ed8;
+}
+
+.productLink {
+    text-decoration: none;
+    color: inherit;
+}
+
+.page p {
+    text-align: center;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    max-width: 600px;
+    margin-inline: auto;
+}
+
+.searchInput {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #555;
+    border-radius: 6px;
+    background: #2a2a3e;
+    color: white;
+    font-size: 15px;
+    outline: none;
+}
+
+.searchInput:focus {
+    border-color: #3b82f6;
+}
+
+

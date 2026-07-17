@@ -3,13 +3,22 @@ import {
   deleteProduct as deleteProductById,
   getProductById,
   listProducts,
+  listUserProducts,
   updateProduct,
-} from "#/services/productService.ts";
-import { Product } from "#/types.js";
-import { isNonEmpty, isNum, isString, Schema, validate } from "#/utils/validation.ts";
+} from '#src/services/productService.js';
+import { Product } from "#src/types.js";
+import {
+  isNonEmpty,
+  isNum,
+  isPositive,
+  isString,
+  Schema,
+  validate,
+} from '#src/utils/validation.js';
 import { RequestHandler } from "express";
 import { Request, Response } from "express";
 import { ObjectId } from "mongodb";
+import { ERROR_CODES } from '#src/utils/errorCodes.js';
 
 type uploadRequest = {
   imageFilename: string;
@@ -21,7 +30,7 @@ type uploadRequest = {
 const uploadSchema: Schema<uploadRequest> = {
   imageFilename: [isString, isNonEmpty],
   productName: [isString, isNonEmpty],
-  price: [isNum],
+  price: [isNum, isPositive],
   details: {},
 };
 
@@ -34,60 +43,82 @@ export const uploadRoute: RequestHandler = async (req, res) => {
   }
   const body = result.value;
   const user = req.user;
-  const productId = await createProduct({
+  const productIdResult = await createProduct({
     name: body.productName,
     imageFilename: body.imageFilename,
     price: body.price,
+    description: req.body.description || "",
     owner: user.id,
     details: body.details,
   });
 
-  return res.status(201).json({
-    id: productId,
-  });
-};
-
-export const deleteRoute = async (req: Request<{ id: string }>, res: Response) => {
-  const id = req.params.id;
-  const user = req.user;
-  const product = await getProductById(new ObjectId(id));
-
-  if (!product) {
-    return res.status(404).json({
-      message: "Product Not Found",
-      error: "missing_product",
+  if (!productIdResult.ok) {
+    return res.status(500).json({
+      message: "Failed to create product",
+      error: productIdResult.error,
     });
   }
 
-  if (user.id !== product.owner && user.role !== "ADMIN" && user.role !== "OWNER") {
+  return res.status(201).json({
+    id: productIdResult.id,
+  });
+};
+
+export const deleteRoute = async (
+  req: Request<{ id: string }>,
+  res: Response,
+) => {
+  const id = req.params.id;
+  const user = req.user;
+  const productResult = await getProductById(new ObjectId(id));
+
+  if (!productResult.ok) {
+    return res.status(404).json({
+      message: "Product Not Found",
+      error: productResult.error,
+    });
+  }
+
+  const product = productResult.product;
+
+  if (
+    user.id !== product.owner &&
+    user.role !== "ADMIN" &&
+    user.role !== "OWNER"
+  ) {
     return res.status(403).json({
       message: "Not Authorized to delete this product",
-      error: "not_authorized",
+      error: ERROR_CODES.USER.FORBIDDEN,
     });
   }
 
   const deleteResult = await deleteProductById(new ObjectId(id));
 
-  if (deleteResult) {
-    return res.status(403).json({
+  if (!deleteResult.ok) {
+    return res.status(404).json({
       message: "Product not found",
-      error: deleteResult,
+      error: deleteResult.error,
     });
   }
 
   return res.status(204).send();
 };
 
+function mapProduct(p: any) {
+  const { _id, ...rest } = p;
+  return { id: _id.toString(), ...rest };
+}
+
 export const getRoute = async (req: Request<{ id: string }>, res: Response) => {
   const id = req.params.id;
-  const product = await getProductById(new ObjectId(id));
-  if (!product) {
+  const productResult = await getProductById(new ObjectId(id));
+  if (!productResult.ok) {
     return res.status(404).json({
       message: "Product Not Found",
-      error: "missing_product",
+      error: productResult.error,
     });
   }
-  res.status(200).json(product);
+  res.status(200).json(mapProduct(productResult.product));
 };
 
 export const listRoute: RequestHandler = async (req, res) => {
@@ -96,26 +127,61 @@ export const listRoute: RequestHandler = async (req, res) => {
   if (isNaN(page)) {
     page = 1;
   }
-  const products = await listProducts(page);
 
-  res.status(200).json({ products });
+  const search = req.query.search?.toString();
+
+  const products = await listProducts(page, search);
+
+  res.status(200).json({ products: products.map(mapProduct) });
 };
 
-export const updateRoute = async (req: Request<{ id: string }>, res: Response) => {
-  const id = req.params.id;
-  const user = req.user;
-  const product = await getProductById(new ObjectId(id));
-  if (!product) {
-    return res.status(404).json({
-      message: "Product Not Found",
-      error: "missing_product",
+export const listUserRoute = async (
+  req: Request<{ id: number }>,
+  res: Response,
+) => {
+  let page = parseInt(req.query.page?.toString() as any);
+  const user = parseInt(req.params.id.toString());
+
+  if (isNaN(page)) {
+    page = 1;
+  }
+
+  if (isNaN(user)) {
+    return res.status(422).json({
+      message: "Invalid user id",
+      error: "invalid_id",
     });
   }
 
-  if (product.owner !== user.id && user.role !== "ADMIN" && user.role !== "OWNER") {
+  const products = await listUserProducts(page, user);
+
+  res.status(200).json({ products: products.map(mapProduct) });
+};
+
+export const updateRoute = async (
+  req: Request<{ id: string }>,
+  res: Response,
+) => {
+  const id = req.params.id;
+  const user = req.user;
+  const productResult = await getProductById(new ObjectId(id));
+  if (!productResult.ok) {
+    return res.status(404).json({
+      message: "Product Not Found",
+      error: productResult.error,
+    });
+  }
+
+  const product = productResult.product;
+
+  if (
+    product.owner !== user.id &&
+    user.role !== "ADMIN" &&
+    user.role !== "OWNER"
+  ) {
     return res.status(403).json({
       message: "Not Authorized",
-      error: "not_authorized",
+      error: ERROR_CODES.USER.FORBIDDEN,
     });
   }
 
@@ -149,6 +215,14 @@ export const updateRoute = async (req: Request<{ id: string }>, res: Response) =
     }
   }
 
+  if (body.description) {
+    if (typeof body.description !== "string") {
+      messages.push('["description"]: must be a string');
+    } else if (body.description.trim() === "") {
+      messages.push('["description"]: must be non-empty');
+    }
+  }
+
   if (body.details) {
     if (typeof body.details !== "object") {
       messages.push('["details"]: must be an object');
@@ -163,9 +237,16 @@ export const updateRoute = async (req: Request<{ id: string }>, res: Response) =
 
   if (body.productName) newDetails.name = body.productName;
   if (body.imageFilename) newDetails.imageFilename = body.imageFilename;
+  if (body.description) newDetails.description = body.description;
   if (body.details) newDetails.details = body.details;
   if (body.price) newDetails.price = body.price;
 
-  await updateProduct(new ObjectId(id), newDetails);
+  const updateResult = await updateProduct(new ObjectId(id), newDetails);
+  if (!updateResult.ok) {
+    return res.status(404).json({
+      message: "Product not found",
+      error: updateResult.error,
+    });
+  }
   res.status(204).send();
 };

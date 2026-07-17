@@ -1,5 +1,5 @@
-import { verifyJWT } from "#/services/tokenService.ts";
-import { getUserByAccessTokenPayload } from "#/services/userService.ts";
+import { verifyJWT } from '#src/services/tokenService.js';
+import { getUserByAccessTokenPayload } from '#src/services/userService.js';
 import { RequestHandler } from "express";
 import { errors } from "jose";
 
@@ -24,16 +24,16 @@ export const protectedRoute: RequestHandler = async (req, res, next) => {
   try {
     const payload = await verifyJWT(token);
 
-    const user = await getUserByAccessTokenPayload(payload);
+    const result = await getUserByAccessTokenPayload(payload);
 
-    if (!user) {
+    if (!result.ok) {
       res.status(401).json({
         message: "User doesn't exist",
-        error: "user_doesnt_exist",
+        error: result.error,
       });
       return;
     }
-    req.user = user;
+    req.user = result.user;
     next();
   } catch (e) {
     if (e instanceof errors.JWTExpired) {
@@ -86,15 +86,16 @@ export const protectedRouteAdmin: RequestHandler = async (req, res, next) => {
   try {
     const payload = await verifyJWT(token);
 
-    const user = await getUserByAccessTokenPayload(payload);
+    const result = await getUserByAccessTokenPayload(payload);
 
-    if (!user) {
+    if (!result.ok) {
       return res.status(404).json({
         message: "User doesn't exist",
         error: "user_doesnt_exist",
       });
     }
-    console.log(user);
+
+    const user = result.user;
 
     if (user.role === "OWNER" || user.role === "ADMIN") {
       req.user = user;

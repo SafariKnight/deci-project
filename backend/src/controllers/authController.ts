@@ -1,4 +1,4 @@
-import { RequestHandler } from "express";
+import { RequestHandler, Request, Response } from "express";
 import {
   isString,
   isNonEmpty,
@@ -8,9 +8,17 @@ import {
   minLength,
   isNum,
   oneOf,
-} from "#/utils/validation.ts";
-import { changeUserRole, getUserById, login, refresh, register } from "#/services/userService.ts";
-import { Role } from "#prisma/enums.ts";
+} from '#src/utils/validation.js';
+import {
+  changeUserRole,
+  getUserById,
+  login,
+  refresh,
+  register,
+} from '#src/services/userService.js';
+import { Role } from '#prisma/enums.js';
+import { invalidateRefreshToken } from '#src/services/tokenService.js';
+import { ERROR_CODES } from '#src/utils/errorCodes.js';
 
 const PASSWORD_MIN_LENGTH = 8;
 
@@ -28,7 +36,7 @@ const registerSchema: Schema<registerRequest> = {
 export const registerRoute: RequestHandler = async (req, res) => {
   const result = validate(req.body, registerSchema);
   if (!result.ok) {
-    res.status(422).send({
+    res.status(422).json({
       errors: result.errors,
     });
     return;
@@ -36,10 +44,18 @@ export const registerRoute: RequestHandler = async (req, res) => {
 
   const body = result.value;
 
-  const registerResult = await register(body.username, body.email, body.password);
+  const registerResult = await register(
+    body.username,
+    body.email,
+    body.password,
+  );
 
   if (!registerResult.ok) {
-    res.status(422).json({ message: "Email already in use", error: registerResult.error });
+    const status =
+      registerResult.error === ERROR_CODES.AUTH.EMAIL_IN_USE ? 409 : 422;
+    res
+      .status(status)
+      .json({ message: "Email already in use", error: registerResult.error });
     return;
   }
 
@@ -61,7 +77,7 @@ const loginSchema: Schema<loginRequest> = {
 export const loginRoute: RequestHandler = async (req, res) => {
   const result = validate(req.body, loginSchema);
   if (!result.ok) {
-    res.status(422).send({
+    res.status(422).json({
       errors: result.errors,
     });
     return;
@@ -71,39 +87,64 @@ export const loginRoute: RequestHandler = async (req, res) => {
 
   const loginResult = await login(body.email, body.password);
   if (!loginResult.ok) {
-    switch (loginResult.error) {
-      case "email_wasnt_found":
-        res.status(401).send({ message: "Email is missing", error: loginResult.error });
-        return;
-      case "wrong_password":
-        res.status(401).send({ message: "Wrong Password", error: loginResult.error });
-        return;
-    }
+    const status = 401;
+    res
+      .status(status)
+      .json({ message: "Invalid credentials", error: loginResult.error });
+    return;
   }
-  const { refreshToken, accessToken } = loginResult;
+  const { refreshToken, accessToken, user } = loginResult;
 
   res.cookie("auth_refresh_token", refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    path: "/auth/refresh",
+    path: "/auth/",
   });
 
-  res.status(200).json({ accessToken });
+  res.status(200).json({
+    accessToken,
+    user,
+  });
+};
+
+export const logoutRoute: RequestHandler = async (req, res) => {
+  const refreshToken = req.cookies["auth_refresh_token"];
+
+  if (!refreshToken) {
+    return res.status(401).json({
+      message: "Missing token",
+      error: ERROR_CODES.AUTH.MISSING_TOKEN,
+    });
+  }
+
+  const result = await invalidateRefreshToken(refreshToken);
+  if (!result.ok) {
+    return res
+      .status(401)
+      .json({ message: "Token was not found", error: result.error });
+  }
+
+  res.clearCookie("auth_refresh_token");
+  res.status(204).send();
 };
 
 export const refreshRoute: RequestHandler = async (req, res) => {
   const refreshToken = req.cookies["auth_refresh_token"];
 
   if (!refreshToken) {
-    res.status(401).json({ message: "Missing token", error: "missing_token" });
+    return res.status(401).json({
+      message: "Missing token",
+      error: ERROR_CODES.AUTH.MISSING_TOKEN,
+    });
   }
 
   const result = await refresh(refreshToken);
 
   if (!result.ok) {
-    res.json(401).send({ message: "Invalid Token", error: "invalid_token" });
-    return;
+    return res
+      .status(401)
+      .json({ message: "Invalid Token", error: result.error });
   }
   res.status(200).json({ accessToken: result.accessToken });
 };
@@ -130,16 +171,17 @@ export const changeRoleRoute: RequestHandler = async (req, res) => {
 
   const body = result.value;
 
-  if ((await getUserById(body.id, { role: true }))?.role === "OWNER") {
+  const userResult = await getUserById(body.id, { role: true });
+  if (userResult.ok && userResult.user.role === "OWNER") {
     return res.status(403).json({
       message: "Cannot change owner's role",
-      error: "owner_must_not_change",
+      error: ERROR_CODES.USER.FORBIDDEN,
     });
   }
-  if ((user.role === "ADMIN", body.newRole === "OWNER")) {
+  if (user.role === "ADMIN" && body.newRole === "OWNER") {
     return res.status(403).json({
       message: "Admin cannot make owner",
-      error: "not_authorized",
+      error: ERROR_CODES.USER.FORBIDDEN,
     });
   }
 
@@ -157,4 +199,33 @@ export const changeRoleRoute: RequestHandler = async (req, res) => {
 
 export const meRoute: RequestHandler = async (req, res) => {
   return res.json(req.user);
+};
+
+export const userDetailsRoute = async (
+  req: Request<{ id: number }>,
+  res: Response,
+) => {
+  const id = parseInt(req.params.id.toString());
+
+  if (isNaN(id)) {
+    return res.status(404).json({
+      message: "Invalid ID",
+      error: "invalid_id",
+    });
+  }
+
+  const result = await getUserById(id, {
+    email: true,
+    id: true,
+    role: true,
+    username: true,
+  });
+
+  if (!result.ok) {
+    return res.status(404).json({
+      message: "User Not Found",
+      error: result.error,
+    });
+  }
+  res.status(200).json(result.user);
 };

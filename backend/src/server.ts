@@ -1,5 +1,5 @@
-import "./config/index.ts";
-import app from "./app.ts";
+import "./config/index.js";
+import app from './app.js';
 
 let PORT: number;
 

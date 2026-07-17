@@ -1,71 +1,89 @@
-import { mongo } from "#/config/mongo.ts";
+import { mongo } from '#src/config/mongo.js';
 import { FileMetadata } from "../types.js";
-import { ObjectId } from "mongodb";
-import fs from "fs";
-import { fileExists } from "#/utils/file.ts";
+import { GridFSBucket, ObjectId } from "mongodb";
+import { Readable } from "stream";
+import { ERROR_CODES, Result } from '#src/utils/errorCodes.js';
 
-const db = mongo.collection<FileMetadata>("files");
+const bucket = new GridFSBucket(mongo, { bucketName: "images" });
+const filesCollection = mongo.collection<FileMetadata>("files");
 
-export async function saveFileMetadata(
-  metadata: FileMetadata,
-): Promise<{ ok: true; id: ObjectId } | { ok: false; error: "file_does_not_exist" }> {
-  const exists = await fileExists(metadata.path);
+export async function uploadFile(
+  filename: string,
+  buffer: Buffer,
+  metadata: { owner: number; uploadedAt: number },
+): Promise<Result<{ metadata: FileMetadata }>> {
+  return new Promise((resolve) => {
+    const readable = Readable.from(buffer);
+    const uploadStream = bucket.openUploadStream(filename, {
+      metadata: { owner: metadata.owner, uploadedAt: metadata.uploadedAt },
+    });
 
-  if (exists) {
-    const result = await db.insertOne(metadata);
-    return { ok: true, id: result.insertedId };
+    readable.pipe(uploadStream);
+
+    uploadStream.on("finish", async () => {
+      const fileMetadata: FileMetadata = {
+        filename,
+        gridfsId: uploadStream.id.toString(),
+        size: buffer.length,
+        uploadedAt: metadata.uploadedAt,
+        owner: metadata.owner,
+      };
+
+      await filesCollection.insertOne(fileMetadata);
+      resolve({ ok: true, metadata: fileMetadata });
+    });
+
+    uploadStream.on("error", () => {
+      resolve({ ok: false, error: ERROR_CODES.FILE.UPLOAD_FAILED });
+    });
+  });
+}
+
+export async function getFileStream(filename: string): Promise<{
+  stream: Readable;
+  length: number;
+  contentType: string;
+} | null> {
+  const file = await filesCollection.findOne({ filename });
+  if (!file) return null;
+  const stream = bucket.openDownloadStream(new ObjectId(file.gridfsId));
+  return { stream, length: file.size, contentType: "application/octet-stream" };
+}
+
+export async function getFileByFilename(
+  filename: string,
+): Promise<Result<{ metadata: FileMetadata }>> {
+  const metadata = await filesCollection.findOne({ filename });
+  if (!metadata) {
+    return { ok: false, error: ERROR_CODES.FILE.NOT_FOUND };
   }
-  return { ok: false, error: "file_does_not_exist" as const };
-}
-
-export async function getFileById(id: ObjectId) {
-  const metadata = await db.findOne({ _id: id });
-  return metadata;
-}
-
-export async function getFileByFilename(filename: string) {
-  const metadata = await db.findOne({ filename });
-  return metadata;
+  return { ok: true, metadata };
 }
 
 const PAGE_SIZE = 15;
 export async function getFiles(page: number = 1) {
   const skipCount = (page - 1) * PAGE_SIZE;
-  const cursor = db.find({}).sort({ uploadedAt: -1 }).skip(skipCount).limit(PAGE_SIZE);
-
+  const cursor = filesCollection
+    .find({})
+    .sort({ uploadedAt: -1 })
+    .skip(skipCount)
+    .limit(PAGE_SIZE);
   return await cursor.toArray();
 }
 
-export async function deleteFileById(id: ObjectId) {
-  const metadata = await getFileById(id);
-  if (!metadata) {
-    return "missing_file" as const;
+export async function deleteFileByFilename(
+  filename: string,
+): Promise<Result<{ ok: true }>> {
+  const result = await getFileByFilename(filename);
+  if (!result.ok) {
+    return { ok: false, error: ERROR_CODES.FILE.MISSING };
   }
+  const metadata = result.metadata;
   try {
-    const res = await db.deleteOne({ _id: id });
-    if (res.deletedCount === 0) {
-      return "could_not_delete" as const;
-    }
-    await fs.promises.unlink(metadata.path);
-    return;
+    await bucket.delete(new ObjectId(metadata.gridfsId));
+    await filesCollection.deleteOne({ filename });
+    return { ok: true };
   } catch {
-    return "unknown_error" as const;
-  }
-}
-
-export async function deleteFileByFilename(filename: string) {
-  const metadata = await getFileByFilename(filename);
-  if (!metadata) {
-    return "missing_file" as const;
-  }
-  try {
-    const res = await db.deleteOne({ _id: metadata._id });
-    if (res.deletedCount === 0) {
-      return "could_not_delete" as const;
-    }
-    await fs.promises.unlink(metadata.path);
-    return;
-  } catch {
-    return "unknown_error" as const;
+    return { ok: false, error: ERROR_CODES.FILE.UNKNOWN };
   }
 }

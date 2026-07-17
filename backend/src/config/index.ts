@@ -1,3 +1,3 @@
-export * from "./env.ts";
-export * from "./postgres.ts";
-export * from "./mongo.ts";
+export * from './env.js';
+export * from './postgres.js';
+export * from './mongo.js';

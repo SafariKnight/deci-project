@@ -8,12 +8,13 @@
   "type": "module",
   "main": "src/server.ts",
   "imports": {
-    "#/*": "./src/*",
+    "#src/*": "./src/*",
     "#prisma/*": "./prisma/generated/*"
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "test": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "build": "tsc",
+    "test": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --forceExit --no-coverage",
     "prisma:seed": "prisma db seed",
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
@@ -23,17 +24,23 @@
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jose": "^6.2.3",
     "mongodb": "^7.5.0",
+    "multer": "^2.0.0",
     "prisma": "^7.8.0"
   },
   "devDependencies": {
     "@jest/globals": "^30.4.1",
     "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
+    "@types/multer": "^2.2.0",
     "@types/node": "^26.1.0",
     "@types/supertest": "^7.2.0",
     "jest": "^30.4.2",
@@ -41,6 +48,5 @@
     "ts-jest": "^29.4.11",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
-  },
-  "packageManager": "pnpm@10.33.0"
+  }
 }

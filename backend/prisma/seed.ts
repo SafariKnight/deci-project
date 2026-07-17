@@ -1,6 +1,6 @@
-import "#/config/env.ts";
-import { postgres } from "#/config/postgres.ts";
-import { hashPassword } from "#/services/passwordService.ts";
+import "../src/config/env.ts";
+import { postgres } from '../src/config/postgres.ts';
+import { hashPassword } from '../src/services/passwordService.ts';
 
 async function main() {
   const kareem = await postgres.user.upsert({

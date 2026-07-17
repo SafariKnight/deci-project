@@ -1,25 +1,33 @@
 import express, { NextFunction, Response, Request } from "express";
 import cookieParser from "cookie-parser";
-import routes from "./routes/route.ts";
-import { fileURLToPath } from "url";
-import path from "path";
+import routes from './routes/route.js';
 import multer from "multer";
+import cors from "cors";
 
 const app = express();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 app.use(express.json({}));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  }),
+);
 
-app.use("/image/by-name", express.static(path.resolve(__dirname, "../images")));
 app.use("/", routes);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  if (err instanceof SyntaxError && "status" in err && err.status === 400 && "body" in err) {
-    return res.status(400).send({ message: "Invalid JSON", error: err.message });
+  if (
+    err instanceof SyntaxError &&
+    "status" in err &&
+    err.status === 400 &&
+    "body" in err
+  ) {
+    return res
+      .status(400)
+      .send({ message: "Invalid JSON", error: err.message });
   }
   next(err);
 });
@@ -27,12 +35,14 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).json({ error: "File is too large. Max size is 10MB." });
-    }
-    if (err.code === "MISSING_FIELD_NAME") {
       return res
         .status(400)
-        .json({ error: "Missing field name. Please provide the required field." });
+        .json({ error: "File is too large. Max size is 10MB." });
+    }
+    if (err.code === "MISSING_FIELD_NAME") {
+      return res.status(400).json({
+        error: "Missing field name. Please provide the required field.",
+      });
     }
     return res.status(400).json({ error: err.message });
   }

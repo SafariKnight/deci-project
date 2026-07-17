@@ -1,0 +1,30 @@
+.notification {
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: #1a1a2e;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 0.75rem 1.25rem;
+    color: white;
+    font-size: 15px;
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    max-width: 400px;
+    text-align: center;
+    line-height: 1.5;
+    cursor: pointer;
+}
+
+.notification ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    color: #f87171;
+}
+
+.notification li {
+    margin: 0.25rem 0;
+}

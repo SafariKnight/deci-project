@@ -4,15 +4,21 @@
     "target": "ESNext",
     "moduleResolution": "node16",
     "allowImportingTsExtensions": true,
-    "noEmit": true,
-
+    "rewriteRelativeImportExtensions": true,
+    "noEmit": false,
+    "outDir": "./dist",
+    "rootDir": ".",
+ 
     "strict": true,
     "isolatedModules": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "paths": {
-      "#/*": ["./src/*"]
+      "#src/*": ["./src/*"],
+      "#prisma/*": ["./prisma/generated/*"]
     },
     "types": ["node", "jest"]
-  }
+  },
+  "include": ["src/**/*.ts", "prisma/**/*.ts"],
+  "exclude": ["src/**/*.test.ts", "src/tests"]
 }

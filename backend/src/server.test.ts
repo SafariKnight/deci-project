@@ -1,8 +1,8 @@
 import "./config/env.ts";
-import app from "./app.ts";
+import app from "./app.js";
 import request, { Response } from "supertest";
 
-describe("THAT'S A SPICY MEAT-A-BALL", () => {
+describe("server.ts", () => {
   it("Health Check", (done) => {
     request(app)
       .get("/health")

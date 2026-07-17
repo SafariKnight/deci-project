@@ -6,7 +6,11 @@ export type Schema<T> = {
 
 type Result<T> = { ok: true; value: T } | { ok: false; errors: string[] };
 
-export function validate<T>(data: any, schema: Schema<T>, path: string = ""): Result<T> {
+export function validate<T>(
+  data: any,
+  schema: Schema<T>,
+  path: string = "",
+): Result<T> {
   if (!data) {
     return { ok: false, errors: ["data doesn't exist"] };
   }
@@ -78,7 +82,9 @@ export const isNum: Validator = {
   message: "must be a number",
 };
 
-export const oneOf: (validElements: unknown[]) => Validator = (validElements) => {
+export const oneOf: (validElements: unknown[]) => Validator = (
+  validElements,
+) => {
   return {
     check: (data) => validElements.includes(data),
     message: `must be one of ${validElements}`,

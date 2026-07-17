@@ -17,9 +17,10 @@ model User {
 }
 
 model RefreshToken {
-  token  String @id
+  token  String  @id
+  valid  Boolean @default(true)
   userId Int
-  user   User   @relation(fields: [userId], references: [id])
+  user   User    @relation(fields: [userId], references: [id])
 }
 
 enum Role {
