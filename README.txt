@@ -11,6 +11,8 @@ password: adminpassword
 
 Github URL: https://github.com/SafariKnight/deci-project
 
+NOTE: the backend is on Render which shuts down the backend if it isn't used for too long, so the first use may take a while
+
 ## Structure
 
 ```

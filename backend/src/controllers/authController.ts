@@ -101,7 +101,6 @@ export const loginRoute: RequestHandler = async (req, res) => {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? "none" : "lax",
-    path: "/auth/",
   });
 
   res.status(200).json({
@@ -127,7 +126,11 @@ export const logoutRoute: RequestHandler = async (req, res) => {
       .json({ message: "Token was not found", error: result.error });
   }
 
-  res.clearCookie("auth_refresh_token");
+  res.clearCookie("auth_refresh_token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  });
   res.status(204).send();
 };
 
