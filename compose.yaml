@@ -79,7 +79,7 @@ services:
       backend-test:
         condition: service_completed_successfully
     environment:
-      - VITE_API_URL=http://backend:3000
+      - VITE_API_URL=http://backend:3000/api
       - NODE_ENV=test
     command: npm test
 
@@ -116,7 +116,7 @@ services:
       dockerfile: Dockerfile
       target: production
       args:
-        VITE_API_URL: http://localhost:3000
+        VITE_API_URL: http://localhost:3000/api
     ports:
       - 8080:80
     depends_on:
