@@ -4,7 +4,7 @@ import styles from "./page.module.css";
 import { Link, useLocation } from "wouter";
 import { Notification } from "../../../components/Notification";
 import { apiClient } from "../../../axios";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 
 export function MePage() {
   const { user, logout } = useAuth();
@@ -29,20 +29,24 @@ export function MePage() {
     throw new Error("User not found.");
   }
 
-  async function userLogout() {
-    const result = await logout();
-    if (result) {
-      switch (result) {
-        case "missing_token":
-          setMessage("Token wasn't found.");
-          break;
-        case "token_not_found":
-          setMessage("User in token wasn't found.");
-          break;
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const result = await logout();
+      if (result) {
+        switch (result) {
+          case "missing_token":
+            setMessage("Token wasn't found.");
+            break;
+          case "token_not_found":
+            setMessage("User in token wasn't found.");
+            break;
+        }
       }
-    }
-    navigate("/");
-  }
+    },
+    onSettled: () => {
+      navigate("/");
+    },
+  });
 
   const products = productsData?.products;
   const filtered = products?.filter((p) =>
@@ -60,8 +64,16 @@ export function MePage() {
             </span>
           )}
         </h1>
-        <button className={styles.userLogout} onClick={userLogout}>
-          Logout
+        <button
+          className={
+            logoutMutation.isPending
+              ? styles.userLogoutDisabled
+              : styles.userLogout
+          }
+          onClick={() => logoutMutation.mutate()}
+          disabled={logoutMutation.isPending}
+        >
+          {logoutMutation.isPending ? "Logging out..." : "Logout"}
         </button>
       </div>
 
