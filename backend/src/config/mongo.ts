@@ -6,8 +6,9 @@ if (!uri) {
 }
 
 export const mongoClient = new MongoClient(uri, {
-  tlsAllowInvalidCertificates: true,
-  tlsAllowInvalidHostnames: true,
+  tls: true,
+  tlsAllowInvalidCertificates: false,
+  serverSelectionTimeoutMS: 10000,
 });
 
 export const mongo = mongoClient.db("db");
