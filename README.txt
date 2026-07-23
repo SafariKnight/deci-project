@@ -1,6 +1,15 @@
 # DECI Week 8 — Full-Stack Auth & E-Commerce
 
 **Pre-hosted:** https://deci-project-xfbt.vercel.app/
+Seeded Owner Details:
+email: foo@bar.com
+password: ownerpassword
+
+Seeded Admin Details:
+email: foo@baz.com
+password: adminpassword
+
+Github URL: https://github.com/SafariKnight/deci-project
 
 ## Structure
 

@@ -11,6 +11,8 @@ export const mongoClient = new MongoClient(uri, {
     strict: true,
     deprecationErrors: true,
   },
+  tlsAllowInvalidCertificates: true,
+  tlsAllowInvalidHostnames: true,
 });
 
 export const mongo = mongoClient.db("db");
