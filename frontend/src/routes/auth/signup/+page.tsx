@@ -1,5 +1,6 @@
 import { useRef, useState, type ReactNode } from "react";
 import { useLocation } from "wouter";
+import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "../../../axios";
 import { validatorParseErrors } from "../../../utils/error";
 import { Notification } from "../../../components/Notification";
@@ -14,18 +15,16 @@ export function SignupPage() {
   const [notificationMessages, setNotificationMessages] = useState<ReactNode[]>(
     [],
   );
-  const [submitDisabled, setSubmitDisabled] = useState<boolean>(false);
   const notificationRef = useRef<HTMLDivElement | null>(null);
 
-  async function onSubmit(e: React.SubmitEvent) {
-    e.preventDefault();
-    setSubmitDisabled(true);
-    setNotificationMessages([]);
-
-    try {
+  const signupMutation = useMutation({
+    mutationFn: async () => {
       await apiClient.post("/auth/register", { username, email, password });
+    },
+    onSuccess: () => {
       navigate("/auth/login");
-    } catch (err) {
+    },
+    onError: (err: unknown) => {
       if (
         axios.isAxiosError(err) &&
         err.response?.data?.type === "validation_error"
@@ -39,9 +38,13 @@ export function SignupPage() {
         setNotificationMessages(["An unexpected error occurred"]);
       }
       notificationRef.current?.showPopover();
-    } finally {
-      setSubmitDisabled(false);
-    }
+    },
+  });
+
+  function onSubmit(e: React.SubmitEvent) {
+    e.preventDefault();
+    setNotificationMessages([]);
+    signupMutation.mutate();
   }
   return (
     <form onSubmit={onSubmit} className={styles.form}>
@@ -87,9 +90,9 @@ export function SignupPage() {
       <button
         className={styles.formSubmit}
         type="submit"
-        disabled={submitDisabled}
+        disabled={signupMutation.isPending}
       >
-        Sign Up
+        {signupMutation.isPending ? "Signing Up..." : "Sign Up"}
       </button>
 
       <Notification ref={notificationRef} seconds={5}>

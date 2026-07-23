@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useAuth } from "../../../hooks/useAuth";
 import { Link, useLocation, useSearchParams } from "wouter";
+import { useMutation } from "@tanstack/react-query";
 import { validatorParseErrors } from "../../../utils/error";
 import { Notification } from "../../../components/Notification";
 import styles from "./page.module.css";
@@ -14,7 +15,6 @@ export function LoginPage() {
   const [notificationMessages, setNotificationMessages] = useState<ReactNode[]>(
     [],
   );
-  const [submitDisabled, setSubmitDisabled] = useState<boolean>(false);
   const [searchParams] = useSearchParams();
   const notificationRef = useRef<HTMLDivElement | null>(null);
 
@@ -26,32 +26,37 @@ export function LoginPage() {
     }
   }, [navigate, user, redirect]);
 
-  async function onSubmit(e: React.SubmitEvent) {
-    setSubmitDisabled(true);
-    e.preventDefault();
-    try {
+  const loginMutation = useMutation({
+    mutationFn: async () => {
       const error = await login(email, password);
-      if (error) {
-        if (error.type === "login_error") {
-          switch (error.error) {
-            case "email_missing":
-              setNotificationMessages(["Email was not found."]);
-              break;
-            case "wrong_password":
-              setNotificationMessages(["Wrong password."]);
-              break;
-          }
+      if (error) throw error;
+    },
+    onError: (error: unknown) => {
+      const loginError = error as
+        | { type: "login_error"; error: LoginAPIError }
+        | { type: "validation_error"; errors: string[] };
+      if (loginError.type === "login_error") {
+        switch (loginError.error) {
+          case "email_missing":
+            setNotificationMessages(["Email was not found."]);
+            break;
+          case "wrong_password":
+            setNotificationMessages(["Wrong password."]);
+            break;
         }
-        if (error.type === "validation_error") {
-          setNotificationMessages(
-            validatorParseErrors(error.errors).map((err) => err),
-          );
-        }
-        notificationRef.current?.showPopover();
       }
-    } finally {
-      setSubmitDisabled(false);
-    }
+      if (loginError.type === "validation_error") {
+        setNotificationMessages(
+          validatorParseErrors(loginError.errors).map((err) => err),
+        );
+      }
+      notificationRef.current?.showPopover();
+    },
+  });
+
+  function onSubmit(e: React.SubmitEvent) {
+    e.preventDefault();
+    loginMutation.mutate();
   }
   return (
     <form onSubmit={onSubmit} className={styles.form}>
@@ -82,9 +87,9 @@ export function LoginPage() {
       <button
         className={styles.formSubmit}
         type="submit"
-        disabled={submitDisabled}
+        disabled={loginMutation.isPending}
       >
-        Submit
+        {loginMutation.isPending ? "Submitting..." : "Submit"}
       </button>
 
       <div className={styles.formSignupLink}>
