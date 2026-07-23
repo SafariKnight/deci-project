@@ -95,10 +95,12 @@ export const loginRoute: RequestHandler = async (req, res) => {
   }
   const { refreshToken, accessToken, user } = loginResult;
 
+  const isProduction = process.env.NODE_ENV === "production";
+
   res.cookie("auth_refresh_token", refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     path: "/auth/",
   });
 
