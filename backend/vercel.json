@@ -1,7 +1,12 @@
 {
-  "functions": {
-    "src/vercel.ts": {
-      "runtime": "nodejs20.x"
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/vercel.ts",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["prisma/**/*", "package.json", "tsconfig.json"]
+      }
     }
-  }
+  ]
 }
