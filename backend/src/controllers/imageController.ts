@@ -99,5 +99,7 @@ export const getRoute: RequestHandler = async (req, res) => {
 
   res.setHeader("Content-Type", fileStream.contentType);
   res.setHeader("Content-Length", fileStream.length);
+  res.setHeader("Access-Control-Allow-Origin", process.env.FRONTEND_URL || "*");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
   fileStream.stream.pipe(res);
 };
