@@ -7,21 +7,9 @@
       "config": {
         "includeFiles": ["prisma/**/*", "package.json", "tsconfig.json"]
       }
-    },
-    {
-      "src": "api/aggregate-reviews.ts",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["package.json", "tsconfig.json"]
-      }
     }
   ],
   "routes": [
-    {
-      "src": "/api/reviews/aggregate",
-      "dest": "/api/aggregate-reviews.ts",
-      "methods": ["GET"]
-    },
     {
       "src": "/(.*)",
       "dest": "/src/vercel.ts"

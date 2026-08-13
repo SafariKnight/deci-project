@@ -1,36 +1,32 @@
 import { RequestHandler } from "express";
-import {
-  isNonEmpty,
-  isNum,
-  isString,
-  oneOf,
-  Schema,
-  validate,
-} from '#src/utils/validation.js';
-import { createReview, getReviewsByProduct } from '#src/services/reviewService.js';
-import { ERROR_CODES } from '#src/utils/errorCodes.js';
+import { Request, Response } from "express";
+import { createReview, getReviewsByProduct } from "../services/reviewService.js";
 
-type createReviewRequest = {
+interface CreateReviewRequest {
   productId: string;
   rating: number;
   comment: string;
-};
-
-const createReviewSchema: Schema<createReviewRequest> = {
-  productId: [isString, isNonEmpty],
-  rating: [isNum, oneOf([1, 2, 3, 4, 5])],
-  comment: [isString, isNonEmpty],
-};
+}
 
 export const createReviewRoute: RequestHandler = async (req, res) => {
-  const result = validate(req.body, createReviewSchema);
-  if (!result.ok) {
-    return res.status(422).json({ errors: result.errors });
+  const body = req.body as CreateReviewRequest;
+
+  if (!body.productId || !body.rating || !body.comment) {
+    return res.status(422).json({
+      errors: ["Missing required fields: productId, rating, comment"],
+    });
   }
 
-  const body = result.value;
-  const userId = req.user.id;
-  const username = req.user.username;
+  if (body.rating < 1 || body.rating > 5) {
+    return res.status(422).json({
+      errors: ["Rating must be between 1 and 5"],
+    });
+  }
+
+  // The review service receives userId and username from the main app
+  // via a JWT-decoded payload or headers
+  const userId = parseInt(req.headers["x-user-id"] as string || "0");
+  const username = req.headers["x-username"] as string || "anonymous";
 
   const reviewResult = await createReview({
     productId: body.productId,
@@ -41,12 +37,6 @@ export const createReviewRoute: RequestHandler = async (req, res) => {
   });
 
   if (!reviewResult.ok) {
-    if (reviewResult.error === ERROR_CODES.REVIEW.PRODUCT_NOT_FOUND) {
-      return res.status(404).json({
-        message: "Product not found",
-        error: reviewResult.error,
-      });
-    }
     return res.status(500).json({
       message: "Failed to create review",
       error: reviewResult.error,

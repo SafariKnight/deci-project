@@ -1,0 +1,157 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aws-simulation
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gcp-simulation
+---
+# AWS Simulation - Frontend Pod
+apiVersion: v1
+kind: Pod
+metadata:
+  name: frontend
+  namespace: aws-simulation
+  labels:
+    app: frontend
+    environment: aws
+spec:
+  containers:
+    - name: frontend
+      image: nginx:alpine
+      ports:
+        - containerPort: 80
+      resources:
+        requests:
+          memory: "64Mi"
+          cpu: "100m"
+        limits:
+          memory: "128Mi"
+          cpu: "200m"
+---
+# AWS Simulation - Frontend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: aws-simulation
+spec:
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+# AWS Simulation - Backend Pod
+apiVersion: v1
+kind: Pod
+metadata:
+  name: backend
+  namespace: aws-simulation
+  labels:
+    app: backend
+    environment: aws
+spec:
+  containers:
+    - name: backend
+      image: httpd:alpine
+      ports:
+        - containerPort: 80
+      resources:
+        requests:
+          memory: "64Mi"
+          cpu: "100m"
+        limits:
+          memory: "128Mi"
+          cpu: "200m"
+---
+# AWS Simulation - Backend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: aws-simulation
+spec:
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+# GCP Simulation - Frontend Pod
+apiVersion: v1
+kind: Pod
+metadata:
+  name: frontend
+  namespace: gcp-simulation
+  labels:
+    app: frontend
+    environment: gcp
+spec:
+  containers:
+    - name: frontend
+      image: nginx:alpine
+      ports:
+        - containerPort: 80
+      resources:
+        requests:
+          memory: "64Mi"
+          cpu: "100m"
+        limits:
+          memory: "128Mi"
+          cpu: "200m"
+---
+# GCP Simulation - Frontend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: gcp-simulation
+spec:
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+# GCP Simulation - Backend Pod
+apiVersion: v1
+kind: Pod
+metadata:
+  name: backend
+  namespace: gcp-simulation
+  labels:
+    app: backend
+    environment: gcp
+spec:
+  containers:
+    - name: backend
+      image: httpd:alpine
+      ports:
+        - containerPort: 80
+      resources:
+        requests:
+          memory: "64Mi"
+          cpu: "100m"
+        limits:
+          memory: "128Mi"
+          cpu: "200m"
+---
+# GCP Simulation - Backend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: gcp-simulation
+spec:
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
