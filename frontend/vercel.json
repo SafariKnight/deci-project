@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://deci-project.onrender.com/api/$1" },
+    { "source": "/api/(.*)", "destination": "https://deci-project-backend-94oo.vercel.app/api/$1" },
     { "source": "/assets/(.*)", "destination": "/assets/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
