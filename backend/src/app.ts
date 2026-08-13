@@ -48,6 +48,16 @@ app.use(
 
 app.use("/", routes);
 
+app.get("/health", (req, res) => {
+  logger.info({
+    timestamp: new Date().toISOString(),
+    level: "info",
+    method: req.method,
+    url: req.url,
+  }, "Health check");
+  res.status(200).send({ status: "OK" });
+});
+
 app.use((req: Request, res: Response) => {
   logger.warn({
     timestamp: new Date().toISOString(),
@@ -117,15 +127,6 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-app.get("/health", (req, res) => {
-  logger.info({
-    timestamp: new Date().toISOString(),
-    level: "info",
-    method: req.method,
-    url: req.url,
-  }, "Health check");
-  res.status(200).send({ status: "OK" });
-});
 
 export default app;
 const shutdown = async () => {
