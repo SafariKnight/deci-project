@@ -1,4 +1,3 @@
-import type { VercelRequest, VercelResponse } from "vercel";
 import { MongoClient } from "mongodb";
 
 const MONGO_URL = process.env.MONGO_URL;
@@ -21,7 +20,7 @@ async function getDb() {
   return cachedDb;
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
   try {
     const db = await getDb();
     const reviewsCollection = db.collection("reviews");
