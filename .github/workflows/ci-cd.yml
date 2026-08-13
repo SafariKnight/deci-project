@@ -58,7 +58,7 @@ jobs:
 
       - name: Deploy Backend to Vercel
         working-directory: ./backend
-        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }} --project=${{ secrets.VERCEL_PROJECT_ID }}
+        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
         env:
           POSTGRES_URL: ${{ secrets.PROD_POSTGRES_URL }}
           MONGO_URL: ${{ secrets.PROD_MONGO_URL }}
@@ -68,11 +68,11 @@ jobs:
 
       - name: Deploy Review Service to Vercel
         working-directory: ./ShopSphere-ReviewService
-        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }} --project=${{ secrets.VERCEL_PROJECT_ID_REVIEW }}
+        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
         env:
           MONGO_URL: ${{ secrets.PROD_MONGO_URL }}
           FRONTEND_URL: ${{ secrets.PROD_FRONTEND_URL }}
 
       - name: Deploy Frontend to Vercel
         working-directory: ./frontend
-        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }} --project=${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
+        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
