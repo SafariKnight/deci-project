@@ -8,5 +8,11 @@
         "includeFiles": ["prisma/**/*", "package.json", "tsconfig.json"]
       }
     }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/src/vercel.ts"
+    }
   ]
 }
