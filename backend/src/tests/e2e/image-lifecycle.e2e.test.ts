@@ -1,4 +1,3 @@
-import "#src/config/env.ts";
 import app from "#src/app.js";
 import request from "supertest";
 import { postgres } from "#src/config/postgres.js";

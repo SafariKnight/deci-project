@@ -1,4 +1,3 @@
-import "./config/env.ts";
 import app from "./app.js";
 import request, { Response } from "supertest";
 

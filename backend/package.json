@@ -12,18 +12,21 @@
     "#prisma/*": "./prisma/generated/*"
   },
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "dotenv -e .env.dev tsx watch src/server.ts",
     "build": "tsc",
-    "test": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --forceExit --no-coverage",
-    "prisma:seed": "prisma db seed",
+    "test": "NODE_ENV=test dotenv -e .env.test -- node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --forceExit --no-coverage",
+    "prestart": "tsc",
+    "start": "node dist/server.js",
+    "prisma:seed": "dotenv -e .env.dev prisma db seed",
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:generate": "prisma generate"
+    "prisma:generate": "prisma generate",
+    "vercel": "vercel"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
-    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",
@@ -35,7 +38,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^30.4.1",
-    "@types/bcrypt": "^6.0.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",

@@ -59,7 +59,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: builder
-    env_file: ./backend/.env.test
+    env_file: .env.test
     depends_on:
       postgresql_test:
         condition: service_healthy
@@ -89,7 +89,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: production
-    env_file: ./backend/.env.dev
+    env_file: .env.dev
     environment:
       POSTGRES_URL: postgresql://postgres:password@postgresql:5432/database
       MONGO_URL: mongodb://mongo:password@mongo:27017/

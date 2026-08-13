@@ -25,6 +25,7 @@ const config: Config = {
       },
     ],
   },
+  setupFiles: ["<rootDir>/jest.setup.ts"],
   ...presetConfig,
 };
 

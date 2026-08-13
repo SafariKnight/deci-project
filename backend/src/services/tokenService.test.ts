@@ -1,4 +1,3 @@
-import "#src/config/env.ts";
 import {
   createAccessToken,
   invalidateRefreshToken,
