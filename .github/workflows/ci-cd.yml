@@ -1,0 +1,90 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_PROJECT_ID_REVIEW: ${{ secrets.VERCEL_PROJECT_ID_REVIEW }}
+
+jobs:
+  install-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Backend build
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: cd backend && npm ci
+
+      - name: Build backend
+        run: cd backend && npm run build
+
+      - name: Install review service dependencies
+        run: cd ShopSphere-ReviewService && npm ci
+
+      - name: Build review service
+        run: cd ShopSphere-ReviewService && npm run build
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
+      - name: Build frontend
+        run: cd frontend && npm run build
+
+  deploy-to-vercel:
+    needs: install-and-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy Backend to Vercel
+        working-directory: ./backend
+        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          POSTGRES_URL: ${{ secrets.PROD_POSTGRES_URL }}
+          MONGO_URL: ${{ secrets.PROD_MONGO_URL }}
+          JWT_SECRET: ${{ secrets.PROD_JWT_SECRET }}
+          FRONTEND_URL: ${{ secrets.PROD_FRONTEND_URL }}
+          REVIEW_SERVICE_URL: ${{ secrets.PROD_REVIEW_SERVICE_URL }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Deploy Review Service to Vercel
+        working-directory: ./ShopSphere-ReviewService
+        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          MONGO_URL: ${{ secrets.PROD_MONGO_URL }}
+          FRONTEND_URL: ${{ secrets.PROD_FRONTEND_URL }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_REVIEW }}
+
+      - name: Deploy Frontend to Vercel
+        working-directory: ./frontend
+        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}

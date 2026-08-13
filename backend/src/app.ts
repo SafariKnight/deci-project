@@ -5,6 +5,7 @@ import multer from "multer";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import { logger } from "#src/utils/logger.js";
 
 const app = express();
 
@@ -16,6 +17,25 @@ app.use(rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 }));
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const startTime = Date.now();
+  res.on("finish", () => {
+    const duration = Date.now() - startTime;
+    logger.info({
+      timestamp: new Date().toISOString(),
+      level: "info",
+      method: req.method,
+      url: req.url,
+      status: res.statusCode,
+      durationMs: duration,
+      userAgent: req.get("user-agent") || "",
+      ip: req.ip || "",
+    }, "request");
+  });
+  next();
+});
+
 app.use(express.json({}));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -28,7 +48,25 @@ app.use(
 
 app.use("/", routes);
 
+app.use((req: Request, res: Response) => {
+  logger.warn({
+    timestamp: new Date().toISOString(),
+    level: "warn",
+    method: req.method,
+    url: req.url,
+  }, "Route not found");
+  res.status(404).json({ error: "Not found" });
+});
+
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  logger.error({
+    timestamp: new Date().toISOString(),
+    level: "error",
+    err: err.message,
+    stack: err.stack,
+    url: req.url,
+    method: req.method,
+  }, "Unhandled error");
   if (
     err instanceof SyntaxError &&
     "status" in err &&
@@ -44,6 +82,14 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof multer.MulterError) {
+    logger.error({
+      timestamp: new Date().toISOString(),
+      level: "error",
+      err: err.message,
+      code: err.code,
+      url: req.url,
+      method: req.method,
+    }, "File upload error");
     if (err.code === "LIMIT_FILE_SIZE") {
       return res
         .status(400)
@@ -59,18 +105,32 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   next(err);
 });
 
-app.get("/health", (req, res) => {
-  res.status(200).send({ status: "OK" });
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+  logger.error({
+    timestamp: new Date().toISOString(),
+    level: "error",
+    err: err.message,
+    stack: err.stack,
+    url: req.url,
+    method: req.method,
+  }, "Unhandled error");
+  res.status(500).json({ error: "Internal server error" });
 });
 
-app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`${req.method} ${req.path}`);
-  next();
+app.get("/health", (req, res) => {
+  logger.info({
+    timestamp: new Date().toISOString(),
+    level: "info",
+    method: req.method,
+    url: req.url,
+  }, "Health check");
+  res.status(200).send({ status: "OK" });
 });
 
 export default app;
 const shutdown = async () => {
-  console.log(`Shutting down...`);
+  logger.info({ timestamp: new Date().toISOString(), level: "info" }, "Shutting down...");
+  process.exit(0);
 };
 
 process.on("SIGTERM", shutdown);
